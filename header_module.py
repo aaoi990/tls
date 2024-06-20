@@ -16,8 +16,8 @@ async def get_head_headers(session, url):
 async def process_chunk(session, chunk):
     tasks = []
     for index, row in chunk.iterrows():
-        server_name = row['ip']
-        ip_address = row['server_name']
+        server_name = row['server_name']
+        ip_address = row['ip']
         print(f"Processing row {index} with server_name {server_name} and ip_address {ip_address}")
 
         if pd.notna(server_name):
