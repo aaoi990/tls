@@ -80,34 +80,24 @@ def find_as_number(ip, as_lookup):
         print(f"Error looking up AS number for IP: {ip}")
     return as_number
 
-def update_csv_with_as(csv_file, as_lookup, output_file):
-    with open(csv_file, 'r') as infile, open(output_file, 'w', newline='') as outfile:
-        reader = csv.reader(infile)
-        writer = csv.writer(outfile)
 
-        header = next(reader)
-        header.append('AS')
-        writer.writerow(header)
-
-        for row in reader:
-            ip = row[0]
-            as_number = find_as_number(ip, as_lookup)
-            row.append(as_number)
-            writer.writerow(row)
+def update_dataframe_with_as(dataframe, as_lookup):
+    dataframe['AS'] = dataframe['ip'].apply(lambda ip: find_as_number(ip, as_lookup))
+    return dataframe
 
 
-def write_servers_to_csv(servers, filename):
-    fieldnames = ['server_name', 'ip','version', 'ciphers', 'ext', 'enc_ext', 'cert_ext', 'alerts', 'fingerprint']
+def write_servers_to_dataframe(servers):
+    fieldnames = ['ip', 'server_name', 'version', 'ciphers', 'ext', 'enc_ext', 'cert_ext', 'alerts', 'fingerprint']
 
-    with open(filename, mode='w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        
-        for ip, data in servers.items():
-            row = {'ip': ip[0], 'server_name': data['server_name']}
-            for key in fieldnames[2:]:  
-                row[str(key)] = '_'.join(str(item) for item in data[str(key)]) 
-            writer.writerow(row)
+    rows = []
+    for _,data in servers.items():
+        row = {'ip': data['ip'], 'server_name': data['server_name']}
+        for key in fieldnames[2:]:
+            row[str(key)] = '_'.join(str(item) for item in data[str(key)])
+        rows.append(row)
+    
+    df = pd.DataFrame(rows, columns=fieldnames)
+    return df
 
 
 def extract_ssl_failure_reason(exception_message):
@@ -157,25 +147,28 @@ def main(input_list_value, label_value, output_dir, fingerprint_file, create_hea
     with open(fingerprint_file, mode='r') as file:
         csv_reader = csv.DictReader(file)
         for row in csv_reader:
-            parse_fingerprint(row['server_name'], row['fingerprint'], row['ip'])
+            row_list = list(row.values())
+            parse_fingerprint(row_list[0], row['fingerprint'], row_list[2])
 
-    write_servers_to_csv(servers, f'{output_dir}/tmp_fps.csv')
-    df = pd.read_csv(f'{output_dir}/tmp_fps.csv')    
+    df = write_servers_to_dataframe(servers)  
     df['input_list'] = input_list_value 
     df['label'] = label_value  
-    df.to_csv(f'{output_dir}/labelled_fp.csv', index=False)
     random_uuid = uuid.uuid4()
-    tm_output_file = filename = str(random_uuid) + ".csv"
+    tm_output_file = str(random_uuid) + ".csv"
     dat_file = 'pyasn.2022-02-07.2301.dat'
-    csv_file = f'{output_dir}/labelled_fp.csv'
     output_file = f'{output_dir}/{tm_output_file}'
 
-    as_lookup = build_as_lookup(dat_file)
-    update_csv_with_as(csv_file, as_lookup, output_file)    
+    as_lookup = build_as_lookup(dat_file)   
+    df = update_dataframe_with_as(df, as_lookup)
+    df.to_csv(output_file, index=False)
     
     if create_header_fp:
         header_file = gather_headers(output_dir, tm_output_file)
-        final_file = create_headers(header_file)        
+        final_file = create_headers(header_file) 
+        df = pd.read_csv(final_file)
+        # df = df.drop(['http_headers'], axis=1)
+        df['final_fp'] = df['fingerprint'].astype(str) + df['filtered_http_headers_hash'].astype(str)
+        df.to_csv(final_file, index=False)       
         print(f"Final file is: {final_file}")
     else:
         print(f"Final file is: {output_dir}/{tm_output_file}")
