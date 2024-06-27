@@ -69,6 +69,15 @@ def parse_fingerprint(server_name, fingerprint, ip):
                         alerts = part.split('<')[-1]
                         servers[(ip, server_name)]['alerts'].add(alerts.replace('_', ' '))
 
+   
+            servers[(ip, server_name)]['version'] = (sorted(servers[(ip, server_name)]['version']))
+            servers[(ip, server_name)]['ciphers'] = (sorted(map(str, servers[(ip, server_name)]['ciphers'])))
+            servers[(ip, server_name)]['ext'] = (sorted(servers[(ip, server_name)]['ext']))
+            servers[(ip, server_name)]['enc_ext'] = (sorted(servers[(ip, server_name)]['enc_ext']))
+            servers[(ip, server_name)]['cert_ext'] =(sorted(servers[(ip, server_name)]['cert_ext']))
+            servers[(ip, server_name)]['alerts'] =  sorted(servers[(ip, server_name)]['alerts'])
+    
+
 def build_as_lookup(dat_file):
     return pyasn.pyasn(dat_file)
 
@@ -121,7 +130,6 @@ def process_headers(headers):
     except Exception as e:
         print(f"Error processing headers: {e}")
         filtered_headers_string = extract_ssl_failure_reason(headers)
-    print(filtered_headers_string)
     return filtered_headers_string.strip() 
 
 def create_mmh3_hash(header_str):
@@ -163,10 +171,12 @@ def main(input_list_value, label_value, output_dir, fingerprint_file, create_hea
     df.to_csv(output_file, index=False)
     
     if create_header_fp:
+        print(
+            "doing headers?"
+        )
         header_file = gather_headers(output_dir, tm_output_file)
         final_file = create_headers(header_file) 
         df = pd.read_csv(final_file)
-        # df = df.drop(['http_headers'], axis=1)
         df['final_fp'] = df['fingerprint'].astype(str) + df['filtered_http_headers_hash'].astype(str)
         df.to_csv(final_file, index=False)       
         print(f"Final file is: {final_file}")
