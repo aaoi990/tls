@@ -184,7 +184,24 @@ def extract_ssl_failure_reason(exception_message: str):
     else:
         return ""
     
-def process_headers(headers):    
+def process_headers(headers):     
+    """
+    Take the raw HTTP Headers in the following format:
+        {'Server': 'nginx', 'Date': 'Mon, 22 Jul 2024 18:36:32 GMT'}
+    And returns a filtered string of headers in the following format:
+         Server:nginx Date
+    
+    The function converts the input string to a dictionary using ast.literal_eval, iterates over the
+    dictionary, appending each key. If the key is in the list of headers to keep values for ('Server'),
+    its value is also appended. If an error occurs during processing, an attempt is
+    made to extract the SSL failure reason from the headers, and this value is returned instead.
+    
+    Parameters:
+        headers (str): A string representation of a dictionary containing HTTP headers.
+    
+    Returns:
+        str: A filtered string of headers that can be used in further processing.
+    """   
     headers_to_keep_values = ['Server']   
     filtered_headers_string = ""
     try:
@@ -215,6 +232,19 @@ def create_mmh3_hash(header_str: str):
 
 
 def create_headers(extended_fp_file, input_list_value): 
+    """
+    Reads from the intermediate file created by the gather_headers function and processes the headers,
+    ensuring that the headers are in the correct format for hashing and then runs the 
+    mmh3 hash function on them.
+    The function strictures the final file name based on the input_list_value and the current date.  
+    
+    Args:
+        extended_fp_file (str): The path to the intermediate file created by gather_headers
+        input_list_value (str): The value in the 'input_list' to be used in the final file name
+
+    Returns:
+        filename (str): final fingerprint file name in the format dir/input_list_date_final
+    """
     df = pd.read_csv(extended_fp_file) 
     df['filtered_http_headers'] = df['http_headers'].apply(process_headers)    
     df['filtered_http_headers_hash'] = df['filtered_http_headers'].apply(create_mmh3_hash)   
