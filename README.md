@@ -1,4 +1,13 @@
-## TLS Similarity Mapping
+## TLS and HTTP Similarity Mapping
+
+TMAP has been used extensively in the chemical science arena to calculate and visualize complex datasets such as the ChEMBL database which contains nodes within the millions. It focusses on nearest neighbour (NN) preservation as a critical feature and avoids linear dimensionality reduction methods such as principal component analysis. When examining the TLS fingerprint of a server the combination of the various elements can be represented a set, and hence comparisons between servers can be made using Jaccard similarity. Relatively simple, the Jaccard equation J(A, B) = |A ∩ B| / |A ∪ B| is a method used to calculate similarity between two sets and is the size of the intersection, divided by the size of the union. Although this is a reasonable approach to take when comparing TLS features, it’s simply unfeasible in practice due to the exhaustive processing require to load each large set before computing the intersection and union of each. To solve this, the built in TMAP MinHash functionality, in combination with TMAPs local sensitivity hashing was used to create approximate estimations, quickly. 
+
+MinHash was specifically chosen here because it enables the compression of high dimensional datasets in such a way that the similarity between them can still be deduced. The technique works by applying multiple hash functions to each set of TLS features to produce a signature for each row. Given a matrix M of sets, a MinHash function is associated with a number of n random permutation of the rows.  The hash functions of the permutations can then be described as h1, h2, h3 … hn and a vector of [h1 (S), h2 (S), h3 (S) … hn (S) ] for set S can be used to construct the MinHash signature. These resultant sets can then be used to form a signature matrix where each column in M is replaced by the MinHash signature for that same column. Although the column numbers remain the same, there are considerably less rows in the signature matrix. The overall benefit of using the technique is based on the logic that the probability that a MinHash function for any given random permutation of rows produces the same value for two sets, is equal to the Jaccard similarity of the sets. Although it’s worth noting that MinHashing does not provide the exact Jaccard similarity, only an estimate, but the larger the signature matrix (the higher number of hash functions), the more accurate the estimates become. MinHash ensures the greatest estimation of similarity between sets can be preserved whilst maximising computational efficiency.
+
+With an approximate method to compress and preserve the similarity, the next problem to solve was how to find the pairs with the greatest similarity quickly and effectively. TMAP solves this problem with its four-phase approach to produce visualisations. During the first stage the MinHash signatures are index in a local sensitivity hashing forest data structure, enabling k-NN searches. When initialising the data structure, the same number of hash functions d is used that was initially used to encode the signatures, along with the number of prefix trees l. A undirected weighted c-k-NNG graph (c approximate, k neighbour) is created from the index points in the LSH forest. This phase takes the argument k which is the number of nearest neighbours to be searched for. The final phases involve the creation of a minimum spanning tree on the graph using Kruskals algorithm, and the creation of the layout of the tree on the Euclidean plane.  The approach taken in the four-stage process preserves 1-nearest neighbour relationships well, although the preservation is influenced mainly by the number of hash functions, with the argument of nearest neighbours k having only minor influences. The benefits of this approach are the speed of the mapping alongside the high locality preservation – which is essential when attempting to map similarity where small vector changes are required to be captured.
+
+
+### Creation
 The process of creating similarity mapping has a dependancy on [MassDNS](https://github.com/blechschmidt/massdns) and the [ActiveTLS goscanner](https://github.com/tumi8/goscanner). The commands for these two tools are as follows:
 
 Provide massdns with a list of domains - domains.txt:
@@ -99,4 +108,10 @@ The C bindings within TMAP provide numerous functions to enable Jaccard distance
 ### Example similarity mapping using malicious domains.
 
 One use case is identiying malicious applications from their similarity based purely on their external features. This example plot is based on the enriched TLS with HTTP header features with a dimensionality of 4475 x 306. Clear clusters can be seen forming across applications, making it a viable approach to determining the actual malware family of plotted domains.
-![malicious](./plots/malicious_classification.png)
+<img src="./plots/malicious_classification.png" alt="drawing" width="500" />
+
+### Example similarity mapping using known good, known bad and new domains. 
+
+Mixed dataset where malicious nodes have formed natural clusters – indicating that there is a high similarity between malware domains across their TLS and HTTP features. The dimensionality of the graph for this data set is 17711 x 2133. 
+
+<img src="./plots/mixed_domains.png" alt="drawing" width="500" />
