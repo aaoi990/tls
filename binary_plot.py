@@ -237,10 +237,10 @@ def main(fingerprint_file, create_header_fp, serve, analysis):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create a Faerun plot from a fingerprint file.")
-    parser.add_argument("-c","--create_header_fp", action="store_true", help="Launches the header fingerprint creation")
-    parser.add_argument("-f","--fingerprints_file", type=str, default="own_scans/cf_master_fingerprint.csv", help="File containing the fingerprints")
+    parser.add_argument("-c","--create_header_fp", action="store_true", help="Include the http headers in the vectors")
+    parser.add_argument("-f","--fingerprints_file", type=str, default="fingerprint.csv", help="File containing the fingerprints")
     parser.add_argument("-s","--serve", action="store_true", help="Host the plot as an interactive website.")
-    parser.add_argument("-a","--analysis", action="store_true", help="Conduct cluster analysis.")
+    parser.add_argument("-a","--analysis", action="store_true", help="Conduct fingerprint and similarity analysis.")
    
     args = parser.parse_args()
 
