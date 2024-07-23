@@ -72,7 +72,8 @@ def create_similarity_matrix(vectors, serve, analysis, fp_data, data_set):
     for _, row in data.iterrows():
         vector_fps.append(row.to_list())
 
-    dims = 2048
+    # Dims here can be considered the dimentionality 
+    dims = 1024
     enc = tm.Minhash(dims)
     lf = tm.LSHForest(d=dims, l=128, store=True)
     minhash_signatures = [enc.from_binary_array(dp) for dp in vector_fps]
