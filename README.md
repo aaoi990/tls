@@ -103,11 +103,13 @@ The plot shows the comparison between the original ActiveTLS stack fingerprint v
 ### Example output from analysis on the similarity. 
 
 The C bindings within TMAP provide numerous functions to enable Jaccard distance evaluation and k-nearest neighbour retrieval. The LSH forest can be queried using the query_linear_scan_by_id functionality which retrieves the k-nearest neighbours to any given id by using a combination of LSH forest traversal and linear scan. This provides an excellent way to visualise and evaluate the success and stability of the distance calculations. In the case of the TMAP functionality, the closer the distance to the given ID, the lower the distance value, with an exact match being represented as 0.0. Thes example output is 20 random ID’s queried for their nearest 10 neighbours with the distance from the origin of 0.0 plotted against their k-nearest neighbour. 
+
 ![Similarity](./plots/similarity_scores_complete_mixed_host.png)
 
 ### Example similarity mapping using malicious domains.
 
 One use case is identiying malicious applications from their similarity based purely on their external features. This example plot is based on the enriched TLS with HTTP header features with a dimensionality of 4475 x 306. Clear clusters can be seen forming across applications, making it a viable approach to determining the actual malware family of plotted domains.
+
 <img src="./plots/malicious_classification.png" alt="drawing" width="500" />
 
 ### Example similarity mapping using known good, known bad and new domains. 
