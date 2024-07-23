@@ -68,3 +68,35 @@ ip	server_name	version	ciphers	ext	enc_ext	cert_ext	alerts	fingerprint	input_lis
 ### Run the binary_plot.py script
 `python3 binary_plot.py -f enriched_fingerprints.csv -c -s`
 
+<table>
+    <tr>
+        <td width="5%">-c</td>
+        <td>If the input fingeprint file contains HTTP Headers, this option means those headers will be included in the vector creation and similarity mapping. </td>
+    </tr>
+  <tr>
+        <td width="5%">-f</td>
+        <td>Location of the input fingerprint file, default is current directory fingerprint.csv</td>
+    </tr>
+  <tr>
+        <td width="5%">-s</td>
+        <td>Used to run the fearun similrity plot intreactively as a web server on http://localhost:8080 this means nodes can be investigated automatically in virus total by double clicking on them.</td>
+    </tr>
+  <tr>
+        <td width="5%">-a</td>
+        <td>Conducts analysis on the fingeprints and similarity calculations. This produces two .png files in the current directory. Enables exploration of the granularity and similarity calculations.</td>
+    </tr>
+</table>
+
+### Example output from the analysis on fingerprint granularity
+The plot shows the comparison between the original ActiveTLS stack fingerprint vs the new fingerprint.
+![Plot](./plots/fingerprint_comparison_by_input.png)
+
+### Example output from analysis on the similarity. 
+
+The C bindings within TMAP provide numerous functions to enable Jaccard distance evaluation and k-nearest neighbour retrieval. The LSH forest can be queried using the query_linear_scan_by_id functionality which retrieves the k-nearest neighbours to any given id by using a combination of LSH forest traversal and linear scan. This provides an excellent way to visualise and evaluate the success and stability of the distance calculations. In the case of the TMAP functionality, the closer the distance to the given ID, the lower the distance value, with an exact match being represented as 0.0. Thes example output is 20 random ID’s queried for their nearest 10 neighbours with the distance from the origin of 0.0 plotted against their k-nearest neighbour. 
+![Similarity](./plots/similarity_scores_complete_mixed_host.png)
+
+### Example similarity mapping using malicious domains.
+
+One use case is identiying malicious applications from their similarity based purely on their external features. This example plot is based on the enriched TLS with HTTP header features with a dimensionality of 4475 x 306. Clear clusters can be seen forming across applications, making it a viable approach to determining the actual malware family of plotted domains.
+![malicious](./plots/malicious_classification.png)
